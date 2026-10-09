@@ -1,0 +1,32 @@
+name: Release
+
+# タグ vX.Y.Z の push で MSI をビルドし、GitHub Releases に添付する。
+# GITHUB_TOKEN（contents: write）だけを使い、OIDC・署名鍵は使わない。
+# 前提: self-hosted の Windows runner には gh（GitHub CLI）をシステム全体の PATH に入れておく。
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ${{ vars.WINDOWS_RUNNER && vars.WINDOWS_RUNNER || 'windows-latest' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - run: dotnet test --solution MyApp.slnx -c Release
+      - run: dotnet publish src/MyApp.App -c Release -o publish
+      # self-hosted の Windows runner では MSI の検証（ICE）が動かないため、そのときだけ省く（ci.yml を参照）
+      - run: dotnet build installer/MyApp.Installer.wixproj -c Release -p:PublishDir=${{ github.workspace }}\publish ${{ vars.WINDOWS_RUNNER && '-p:SuppressValidation=true' || '' }}
+      - name: Create the GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $msi = Get-ChildItem installer/bin/x64/Release/*.msi | Select-Object -First 1
+          gh release create "${{ github.ref_name }}" $msi.FullName --title "${{ github.ref_name }}" --generate-notes

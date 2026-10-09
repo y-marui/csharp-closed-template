@@ -1,0 +1,17 @@
+.claude/
+
+# .NET build output
+bin/
+obj/
+publish/
+dist/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+
+# 実行機固有の設定（*.example をコピーして使う）
+config.json
+.env

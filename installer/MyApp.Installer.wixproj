@@ -1,0 +1,13 @@
+<Project Sdk="WixToolset.Sdk">
+
+  <!-- WiX のバージョンは global.json の msbuild-sdks で固定する。
+       Version は Directory.Build.props から受ける（二重管理しない） -->
+  <PropertyGroup>
+    <OutputName>MyApp-v$(Version)-win-x64</OutputName>
+    <Platform>x64</Platform>
+    <!-- publish したフォルダ（dotnet publish src/MyApp.App -c Release -o publish）。絶対パスで渡す -->
+    <PublishDir Condition="'$(PublishDir)' == ''">$(MSBuildThisFileDirectory)..\publish</PublishDir>
+    <DefineConstants>Version=$(Version);PublishDir=$(PublishDir)</DefineConstants>
+  </PropertyGroup>
+
+</Project>
